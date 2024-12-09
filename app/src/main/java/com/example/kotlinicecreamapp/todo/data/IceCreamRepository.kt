@@ -1,21 +1,28 @@
 import android.util.Log
 import com.example.kotlinicecreamapp.core.TAG
+import com.example.kotlinicecreamapp.core.data.OfflineChange
+import com.example.kotlinicecreamapp.core.data.local.OfflineChangeDao
 import com.example.kotlinicecreamapp.core.data.remote.Api
 import com.example.kotlinicecreamapp.todo.data.IceCream
 import com.example.kotlinicecreamapp.todo.data.local.IceCreamDao
 import com.example.kotlinicecreamapp.todo.data.remote.IceCreamEvent
 import com.example.kotlinicecreamapp.todo.data.remote.IceCreamService
 import com.example.kotlinicecreamapp.todo.data.remote.IceCreamWsClient
+import com.example.kotlinicecreamapp.util.ConnectivityManagerNetworkMonitor
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 
 class IceCreamRepository(
     private val iceCreamService: IceCreamService,
     private val iceCreamWsClient: IceCreamWsClient,
-    private val iceCreamDao: IceCreamDao
+    private val iceCreamDao: IceCreamDao,
+    private val offlineChangesDao: OfflineChangeDao,
+    private val networkMonitor: ConnectivityManagerNetworkMonitor
 ) {
     val iceCreamStream by lazy { iceCreamDao.getAll() }
 
@@ -81,24 +88,77 @@ class IceCreamRepository(
 
     suspend fun update(iceCream: IceCream): IceCream {
         Log.d(TAG, "update $iceCream...")
-        val updatedIceCream =
-            iceCreamService.update(
-                iceCream = iceCream,
-                id = iceCream._id,
-                authorization = getBearerToken()
+        return try {
+            val isOnline = networkMonitor.isOnline.first()
+            if (isOnline) {
+                val updatedIceCream =
+                    iceCreamService.update(
+                        iceCream = iceCream,
+                        id = iceCream._id,
+                        authorization = getBearerToken()
+                    )
+                Log.d(TAG, "update $iceCream succeeded online")
+                handleIceCreamUpdated(updatedIceCream)
+                updatedIceCream
+            } else {
+                Log.d(TAG, "Network is offline, saving $iceCream locally")
+                offlineChangesDao.insert(
+                    OfflineChange(
+                        type = "update",
+                        iceCreamJson = iceCream.toJson()
+                    )
+                )
+                handleIceCreamUpdated(iceCream)
+                iceCream
+            }
+        } catch (e: Exception) {
+            Log.d(TAG, "update $iceCream failed")
+            offlineChangesDao.insert(
+                OfflineChange(
+                    type = "update",
+                    iceCreamJson = iceCream.toJson()
+                )
             )
-        Log.d(TAG, "update $iceCream succeeded")
-        handleIceCreamUpdated(updatedIceCream)
-        return updatedIceCream
+            handleIceCreamUpdated(iceCream)
+            iceCream
+        }
     }
 
     suspend fun save(iceCream: IceCream): IceCream {
         Log.d(TAG, "save $iceCream...")
-        val createdIceCream =
-            iceCreamService.create(iceCream = iceCream, authorization = getBearerToken())
-        Log.d(TAG, "save $iceCream succeeded")
-        handleIceCreamCreated(createdIceCream)
-        return createdIceCream
+
+        return try {
+            val isOnline = networkMonitor.isOnline.first()
+            if (isOnline) {
+                val savedIceCream = iceCreamService.create(
+                    iceCream = iceCream,
+                    authorization = getBearerToken()
+                )
+                Log.d(TAG, "save $iceCream succeeded online")
+                handleIceCreamCreated(savedIceCream)
+                savedIceCream
+            } else {
+                Log.d(TAG, "Network is offline, saving $iceCream locally")
+                offlineChangesDao.insert(
+                    OfflineChange(
+                        type = "create",
+                        iceCreamJson = iceCream.toJson()
+                    )
+                )
+                handleIceCreamCreated(iceCream)
+                iceCream
+            }
+        } catch (e: Exception) {
+            Log.d(TAG, "save $iceCream failed")
+            offlineChangesDao.insert(
+                OfflineChange(
+                    type = "create",
+                    iceCreamJson = iceCream.toJson()
+                )
+            )
+            handleIceCreamCreated(iceCream)
+            iceCream
+        }
     }
 
     private suspend fun handleIceCreamDeleted(iceCream: IceCream) {

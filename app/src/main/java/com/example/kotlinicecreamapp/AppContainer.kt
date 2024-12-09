@@ -11,13 +11,14 @@ import com.example.kotlinicecreamapp.core.data.UserPreferencesRepository
 import com.example.kotlinicecreamapp.core.data.remote.Api
 import com.example.kotlinicecreamapp.todo.data.remote.IceCreamService
 import com.example.kotlinicecreamapp.todo.data.remote.IceCreamWsClient
+import com.example.kotlinicecreamapp.util.ConnectivityManagerNetworkMonitor
 
 
 val Context.userPreferencesDataStore by preferencesDataStore(
     name = "user_preferences"
 )
 
-class AppContainer(val context: Context) {
+class AppContainer(val context: Context, val networkMonitor: ConnectivityManagerNetworkMonitor) {
     init {
         Log.d(TAG, "init")
     }
@@ -30,7 +31,7 @@ class AppContainer(val context: Context) {
     private val database: MyAppDatabase by lazy { MyAppDatabase.getDatabase(context) }
 
     val iceCreamRepository : IceCreamRepository by lazy {
-        IceCreamRepository(iceCreamService, iceCreamsWsClient, database.iceCreamDao())
+        IceCreamRepository(iceCreamService, iceCreamsWsClient, database.iceCreamDao(), database.offlineChangeDao(), networkMonitor)
     }
 
     val authRepository: AuthRepository by lazy {

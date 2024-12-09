@@ -3,6 +3,7 @@ package com.example.kotlinicecreamapp
 import android.app.Application
 import android.util.Log
 import com.example.kotlinicecreamapp.core.TAG
+import com.example.kotlinicecreamapp.util.ConnectivityManagerNetworkMonitor
 
 class MyApplication : Application() {
     lateinit var container: AppContainer
@@ -10,6 +11,7 @@ class MyApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         Log.d(TAG, "init")
-        container = AppContainer(this)
+        val networkMonitor = ConnectivityManagerNetworkMonitor(this)
+        container = AppContainer(this, networkMonitor)
     }
 }

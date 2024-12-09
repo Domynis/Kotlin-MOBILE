@@ -8,23 +8,54 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.lifecycleScope
-import com.example.kotlinicecreamapp.MyAppNavHost
-import com.example.kotlinicecreamapp.MyApplication
 import com.example.kotlinicecreamapp.core.TAG
 import com.example.kotlinicecreamapp.ui.theme.KotlinIceCreamAppTheme
 import kotlinx.coroutines.launch
 
 
 class MainActivity : ComponentActivity() {
+//    private lateinit var networkMonitor: ConnectivityManagerNetworkMonitor
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        val networkMonitor = (application as MyApplication).container.networkMonitor
         setContent {
             Log.d(TAG, "onCreate")
             MyApp {
                 MyAppNavHost()
             }
         }
+
+        lifecycleScope.launch {
+            networkMonitor.isOnline.collect { isOnline ->
+                handleNetworkChange(isOnline)
+            }
+        }
     }
+
+    private fun handleNetworkChange(isOnline: Boolean) {
+        if(isOnline) {
+            Log.d(TAG, "Network is online")
+//            triggerUploadWorker()
+        } else {
+            Log.d(TAG, "Network is offline")
+//            showNotification("No internet connection")
+        }
+    }
+
+//    fun showNotification(message: String) {
+//        val notificationManager = NotificationManagerCompat.from(this)
+//        val notification = NotificationCompat.Builder(this, "ice_cream_channel")
+//            .setContentTitle("IceCream App")
+//            .setContentText(message)
+//            .setPriority(NotificationCompat.PRIORITY_HIGH)
+//            .build()
+//
+//        with(notificationManager) {
+//            notify(System.currentTimeMillis().toInt(), notification)
+//        }
+//    }
+
 
     override fun onResume() {
         super.onResume()
