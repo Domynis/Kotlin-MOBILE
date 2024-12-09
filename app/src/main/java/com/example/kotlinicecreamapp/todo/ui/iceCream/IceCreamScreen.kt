@@ -9,7 +9,9 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
@@ -24,6 +26,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.kotlinicecreamapp.R
 import com.example.kotlinicecreamapp.core.Result
@@ -35,18 +38,19 @@ fun IceCreamScreen(iceCreamId: String?, onClose: () -> Unit) {
         viewModel<IceCreamViewModel>(factory = IceCreamViewModel.Factory(iceCreamId))
     val iceCreamUiState = iceCreamViewModel.uiState
 
-    var text by rememberSaveable { mutableStateOf(iceCreamUiState.iceCream?.text ?: "") }
-    var done by rememberSaveable { mutableStateOf(iceCreamUiState.iceCream?.done ?: false) }
-    Log.d("IceCreamScreen", "recompose, text = $text, done = $done")
+    var text by rememberSaveable { mutableStateOf(iceCreamUiState.iceCream?.name ?: "") }
+    var tasty by rememberSaveable { mutableStateOf(iceCreamUiState.iceCream?.tasty ?: false) }
+    var price by rememberSaveable { mutableStateOf(iceCreamUiState.iceCream?.price ?: 0.0) }
+    Log.d("IceCreamScreen", "recompose, text = $text, tasty = $tasty, price = $price")
 
-    var textInitialized by remember { mutableStateOf(iceCreamId == null) }
+    var isInitialized by remember { mutableStateOf(iceCreamId == null) }
 
 
     LaunchedEffect(iceCreamId, iceCreamUiState.loadResult) {
-        if (!textInitialized && iceCreamUiState.loadResult !is Result.Loading) {
-            text = iceCreamUiState.iceCream?.text ?: ""
-            done = iceCreamUiState.iceCream?.done ?: false
-            textInitialized = true
+        if (!isInitialized && iceCreamUiState.loadResult !is Result.Loading) {
+            text = iceCreamUiState.iceCream?.name ?: ""
+            tasty = iceCreamUiState.iceCream?.tasty ?: false
+            isInitialized = true
         }
     }
 
@@ -74,45 +78,94 @@ fun IceCreamScreen(iceCreamId: String?, onClose: () -> Unit) {
                 title = { Text(text = stringResource(id = R.string.icecream)) },
                 actions = {
                     Button(onClick = {
-                        Log.d("IceCreamScreen", "save iceCream text = $text")
-                        iceCreamViewModel.saveOrUpdateIceCream(text)
+                        Log.d("IceCreamScreen", "save iceCream text = $text, tasty = $tasty, price = $price")
+                        iceCreamViewModel.saveOrUpdateIceCream(text, tasty, price)
                     }) { Text("Save") }
                 }
             )
         }
-    ) {
-        Column(
-            modifier = Modifier
-                .padding(it)
-        ) {
-            if (iceCreamUiState.loadResult is Result.Loading) {
-                CircularProgressIndicator()
-                return@Column
+    ) { padding ->
+        IceCreamContent(
+            uiState = iceCreamUiState,
+            text = text,
+            onTextChange = { text = it },
+            tasty = tasty,
+            onTastyChange = { tasty = it },
+            price = price,
+            onPriceChange = { price = it },
+            modifier = Modifier.padding(padding)
+        )
+    }
+}
+
+@Composable
+fun IceCreamContent(
+    uiState: IceCreamUiState,
+    text: String,
+    onTextChange: (String) -> Unit,
+    tasty: Boolean,
+    onTastyChange: (Boolean) -> Unit,
+    price: Double,
+    onPriceChange: (Double) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(modifier = modifier) {
+        when (uiState.loadResult) {
+            is Result.Loading -> {
+                CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
             }
-            if (iceCreamUiState.submitResult is Result.Loading) {
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    LinearProgressIndicator()
-                }
+            is Result.Error -> {
+                Text(
+                    text = "Failed to load Ice Cream: ${(uiState.loadResult as Result.Error).exception?.message}",
+                    color = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.fillMaxWidth()
+                )
             }
-            if (iceCreamUiState.loadResult is Result.Error) {
-                Text(text = "Failed to load iceCream - ${(iceCreamUiState.loadResult as Result.Error).exception?.message}")
-            }
-            Row {
+            else -> {
                 TextField(
                     value = text,
-                    onValueChange = { text = it }, label = { Text("Text") },
-                    modifier = Modifier.fillMaxWidth(),
+                    onValueChange = onTextChange,
+                    label = { Text("Name") },
+                    modifier = Modifier.fillMaxWidth()
                 )
-            }
-            if (iceCreamUiState.submitResult is Result.Error) {
-                Text(
-                    text = "Failed to submit iceCream - ${(iceCreamUiState.submitResult as Result.Error).exception?.message}",
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text("Tasty:")
+                    Switch(
+                        checked = tasty,
+                        onCheckedChange = onTastyChange,
+                        modifier = Modifier.padding(start = 8.dp)
+                    )
+                }
+                TextField(
+                    value = price.toString(),
+                    onValueChange = { onPriceChange(it.toDoubleOrNull() ?: 0.0) },
+                    label = { Text("Price (€)") },
                     modifier = Modifier.fillMaxWidth(),
+                    isError = price < 0
                 )
+                if (price < 0) {
+                    Text(
+                        text = "Price must be a positive value.",
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.labelMedium
+                    )
+                }
             }
+        }
+
+        if (uiState.submitResult is Result.Loading) {
+            LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+        } else if (uiState.submitResult is Result.Error) {
+            Text(
+                text = "Failed to submit Ice Cream: ${(uiState.submitResult as Result.Error).exception?.message}",
+                color = MaterialTheme.colorScheme.error,
+                modifier = Modifier.fillMaxWidth()
+            )
         }
     }
 }

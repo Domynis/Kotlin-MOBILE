@@ -52,12 +52,12 @@ class IceCreamViewModel(
         }
     }
 
-    fun saveOrUpdateIceCream(text: String) {
+    fun saveOrUpdateIceCream(text: String, tasty: Boolean, price: Double) {
         viewModelScope.launch {
             Log.d(TAG, "saveOrUpdateIceCream...");
             try {
                 uiState = uiState.copy(submitResult = Result.Loading)
-                val iceCream = uiState.iceCream.copy(text = text)
+                val iceCream = uiState.iceCream.copy(name = text, tasty = tasty, price = price)
                 val savedIceCream: IceCream;
                 savedIceCream = if (iceCreamId != null) {
                     iceCreamRepository.update(iceCream)
@@ -76,7 +76,7 @@ class IceCreamViewModel(
     }
 
     companion object {
-        fun Factory(iceCreamId: String?) : ViewModelProvider.Factory = viewModelFactory {
+        fun Factory(iceCreamId: String?): ViewModelProvider.Factory = viewModelFactory {
             initializer {
                 val app =
                     (this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as MyApplication)
