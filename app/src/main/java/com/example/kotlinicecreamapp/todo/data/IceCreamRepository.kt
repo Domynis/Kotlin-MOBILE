@@ -1,4 +1,5 @@
 import android.util.Log
+import com.example.kotlinicecreamapp.core.NotificationHelper
 import com.example.kotlinicecreamapp.core.TAG
 import com.example.kotlinicecreamapp.core.data.OfflineChange
 import com.example.kotlinicecreamapp.core.data.local.OfflineChangeDao
@@ -23,7 +24,8 @@ class IceCreamRepository(
     private val iceCreamWsClient: IceCreamWsClient,
     private val iceCreamDao: IceCreamDao,
     val offlineChangesDao: OfflineChangeDao,
-    private val networkMonitor: ConnectivityManagerNetworkMonitor
+    private val networkMonitor: ConnectivityManagerNetworkMonitor,
+    private val notificationHelper: NotificationHelper
 ) {
     val iceCreamStream by lazy { iceCreamDao.getAll() }
     val offlineChangesStream by lazy { offlineChangesDao.getAllChanges() }
@@ -108,6 +110,7 @@ class IceCreamRepository(
                 updatedIceCream
             } else {
                 Log.d(TAG, "Network is offline, saving $iceCream locally")
+                notificationHelper.showUpdateFailedNotification(iceCream)
                 offlineChangesDao.insert(
                     OfflineChange(
                         type = "update",
@@ -120,6 +123,7 @@ class IceCreamRepository(
             }
         } catch (e: Exception) {
             Log.d(TAG, "update $iceCream failed")
+            notificationHelper.showUpdateFailedNotification(iceCream)
             offlineChangesDao.insert(
                 OfflineChange(
                     type = "update",
@@ -152,7 +156,7 @@ class IceCreamRepository(
                 savedIceCream
             } else {
                 Log.d(TAG, "Network is offline, saving $iceCream locally")
-
+                notificationHelper.showCreateFailedNotification(iceCream)
                 // Assign a temporary ID for offline use
                 if (iceCream._id.isEmpty()) {
                     iceCream._id = "local-${UUID.randomUUID()}"
@@ -170,6 +174,7 @@ class IceCreamRepository(
             }
         } catch (e: Exception) {
             Log.d(TAG, "save $iceCream failed")
+            notificationHelper.showCreateFailedNotification(iceCream)
 
             if (iceCream._id.isEmpty()) {
                 iceCream._id = "local-${UUID.randomUUID()}"

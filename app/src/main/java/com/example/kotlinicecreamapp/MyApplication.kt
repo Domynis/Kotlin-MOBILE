@@ -2,6 +2,7 @@ package com.example.kotlinicecreamapp
 
 import android.app.Application
 import android.util.Log
+import com.example.kotlinicecreamapp.core.NotificationHelper
 import com.example.kotlinicecreamapp.core.TAG
 import com.example.kotlinicecreamapp.util.ConnectivityManagerNetworkMonitor
 
@@ -12,7 +13,8 @@ class MyApplication : Application() {
         super.onCreate()
         Log.d(TAG, "init")
         val networkMonitor = ConnectivityManagerNetworkMonitor(this)
-        container = AppContainer(this, networkMonitor)
+        val notificationHelper = NotificationHelper(this)
+        container = AppContainer(this, networkMonitor, notificationHelper)
 //        val configuration = Configuration.Builder()
 //            .setWorkerFactory(IceCreamWorkerFactory(container))
 //            .build()

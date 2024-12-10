@@ -1,5 +1,8 @@
 package com.example.kotlinicecreamapp
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -8,9 +11,9 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.lifecycleScope
-import androidx.work.OneTimeWorkRequest
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
+import com.example.kotlinicecreamapp.core.NotificationHelper
 import com.example.kotlinicecreamapp.core.OfflineSyncWorker
 import com.example.kotlinicecreamapp.core.TAG
 import com.example.kotlinicecreamapp.ui.theme.KotlinIceCreamAppTheme
@@ -18,7 +21,8 @@ import kotlinx.coroutines.launch
 
 
 class MainActivity : ComponentActivity() {
-//    private lateinit var networkMonitor: ConnectivityManagerNetworkMonitor
+    //    private lateinit var networkMonitor: ConnectivityManagerNetworkMonitor
+    private lateinit var notificationHelper: NotificationHelper
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -30,6 +34,13 @@ class MainActivity : ComponentActivity() {
             }
         }
 
+        notificationHelper = NotificationHelper(this)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (!notificationHelper.hasNotificationPermission()) {
+                requestNotificationPermission()
+            }
+        }
+
         lifecycleScope.launch {
             networkMonitor.isOnline.collect { isOnline ->
                 handleNetworkChange(isOnline)
@@ -38,13 +49,51 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun handleNetworkChange(isOnline: Boolean) {
-        if(isOnline) {
+        if (isOnline) {
             Log.d(TAG, "Network is online")
+//            notificationHelper.showNetworkStatusNotification(true)
             triggerUploadWorker()
         } else {
             Log.d(TAG, "Network is offline")
-//            showNotification("No internet connection")
+            notificationHelper.showNetworkStatusNotification(false)
         }
+    }
+
+    private fun requestNotificationPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            requestPermissions(
+                arrayOf(Manifest.permission.POST_NOTIFICATIONS),
+                NOTIFICATION_PERMISSION_REQUEST_CODE
+            )
+        }
+    }
+
+    /**
+     * Handle permission request result
+     */
+    @Deprecated("Deprecated in Java")
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+
+        if (requestCode == NOTIFICATION_PERMISSION_REQUEST_CODE) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                if (grantResults.isNotEmpty() &&
+                    grantResults[0] == PackageManager.PERMISSION_GRANTED
+                ) {
+                    Log.d("MainActivity", "Notification permission granted")
+                } else {
+                    Log.d("MainActivity", "Notification permission denied")
+                }
+            }
+        }
+    }
+
+    companion object {
+        private const val NOTIFICATION_PERMISSION_REQUEST_CODE = 1001
     }
 
     private fun triggerUploadWorker() {
@@ -56,20 +105,6 @@ class MainActivity : ComponentActivity() {
             .build()
         WorkManager.getInstance(applicationContext).enqueue(workRequest)
     }
-
-//    fun showNotification(message: String) {
-//        val notificationManager = NotificationManagerCompat.from(this)
-//        val notification = NotificationCompat.Builder(this, "ice_cream_channel")
-//            .setContentTitle("IceCream App")
-//            .setContentText(message)
-//            .setPriority(NotificationCompat.PRIORITY_HIGH)
-//            .build()
-//
-//        with(notificationManager) {
-//            notify(System.currentTimeMillis().toInt(), notification)
-//        }
-//    }
-
 
     override fun onResume() {
         super.onResume()

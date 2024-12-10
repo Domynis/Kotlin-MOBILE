@@ -6,6 +6,7 @@ import android.util.Log
 import androidx.datastore.preferences.preferencesDataStore
 import com.example.kotlinicecreamapp.auth.data.AuthRepository
 import com.example.kotlinicecreamapp.auth.data.remote.AuthDataSource
+import com.example.kotlinicecreamapp.core.NotificationHelper
 import com.example.kotlinicecreamapp.core.TAG
 import com.example.kotlinicecreamapp.core.data.UserPreferencesRepository
 import com.example.kotlinicecreamapp.core.data.remote.Api
@@ -18,7 +19,7 @@ val Context.userPreferencesDataStore by preferencesDataStore(
     name = "user_preferences"
 )
 
-class AppContainer(val context: Context, val networkMonitor: ConnectivityManagerNetworkMonitor) {
+class AppContainer(val context: Context, val networkMonitor: ConnectivityManagerNetworkMonitor, notificationHelper: NotificationHelper) {
     init {
         Log.d(TAG, "init")
     }
@@ -31,7 +32,7 @@ class AppContainer(val context: Context, val networkMonitor: ConnectivityManager
     private val database: MyAppDatabase by lazy { MyAppDatabase.getDatabase(context) }
 
     val iceCreamRepository : IceCreamRepository by lazy {
-        IceCreamRepository(iceCreamService, iceCreamsWsClient, database.iceCreamDao(), database.offlineChangeDao(), networkMonitor)
+        IceCreamRepository(iceCreamService, iceCreamsWsClient, database.iceCreamDao(), database.offlineChangeDao(), networkMonitor, notificationHelper)
     }
 
     val authRepository: AuthRepository by lazy {
