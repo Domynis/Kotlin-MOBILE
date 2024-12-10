@@ -6,7 +6,7 @@ import com.google.gson.Gson
 
 @Entity(tableName = "IceCreams")
 data class IceCream(
-    @PrimaryKey val _id: String = "",
+    @PrimaryKey var _id: String = "",
     val name: String = "",
     val tasty: Boolean = false,
     val price: Double = 0.0) {

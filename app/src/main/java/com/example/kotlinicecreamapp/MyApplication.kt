@@ -13,5 +13,10 @@ class MyApplication : Application() {
         Log.d(TAG, "init")
         val networkMonitor = ConnectivityManagerNetworkMonitor(this)
         container = AppContainer(this, networkMonitor)
+//        val configuration = Configuration.Builder()
+//            .setWorkerFactory(IceCreamWorkerFactory(container))
+//            .build()
+//        Log.d(TAG, "Initializing WorkManager")
+//        WorkManager.initialize(this, configuration)
     }
 }

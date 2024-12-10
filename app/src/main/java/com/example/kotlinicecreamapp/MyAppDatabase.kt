@@ -11,7 +11,7 @@ import com.example.kotlinicecreamapp.core.data.local.OfflineChangeDao
 import com.example.kotlinicecreamapp.todo.data.IceCream
 import com.example.kotlinicecreamapp.todo.data.local.IceCreamDao
 
-@Database(entities = [IceCream::class, OfflineChange::class], version = 4)
+@Database(entities = [IceCream::class, OfflineChange::class], version = 5)
 abstract class MyAppDatabase : RoomDatabase() {
     abstract fun iceCreamDao() : IceCreamDao
     abstract fun offlineChangeDao() : OfflineChangeDao

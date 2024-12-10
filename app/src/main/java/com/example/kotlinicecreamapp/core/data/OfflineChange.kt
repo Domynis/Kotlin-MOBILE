@@ -8,5 +8,6 @@ import com.example.kotlinicecreamapp.todo.data.IceCream
 data class OfflineChange(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
     val type: String, // e.g., "create", "update", "delete"
+    val iceCreamId: String,
     val iceCreamJson: String
 )

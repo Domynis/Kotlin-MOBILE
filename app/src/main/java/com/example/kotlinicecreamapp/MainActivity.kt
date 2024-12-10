@@ -8,6 +8,10 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.lifecycleScope
+import androidx.work.OneTimeWorkRequest
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
+import com.example.kotlinicecreamapp.core.OfflineSyncWorker
 import com.example.kotlinicecreamapp.core.TAG
 import com.example.kotlinicecreamapp.ui.theme.KotlinIceCreamAppTheme
 import kotlinx.coroutines.launch
@@ -36,11 +40,21 @@ class MainActivity : ComponentActivity() {
     private fun handleNetworkChange(isOnline: Boolean) {
         if(isOnline) {
             Log.d(TAG, "Network is online")
-//            triggerUploadWorker()
+            triggerUploadWorker()
         } else {
             Log.d(TAG, "Network is offline")
 //            showNotification("No internet connection")
         }
+    }
+
+    private fun triggerUploadWorker() {
+        val constraints = androidx.work.Constraints.Builder()
+            .setRequiredNetworkType(androidx.work.NetworkType.CONNECTED)
+            .build()
+        val workRequest = OneTimeWorkRequestBuilder<OfflineSyncWorker>()
+            .setConstraints(constraints)
+            .build()
+        WorkManager.getInstance(applicationContext).enqueue(workRequest)
     }
 
 //    fun showNotification(message: String) {

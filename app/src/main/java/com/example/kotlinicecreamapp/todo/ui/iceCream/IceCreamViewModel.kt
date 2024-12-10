@@ -57,9 +57,8 @@ class IceCreamViewModel(
             Log.d(TAG, "saveOrUpdateIceCream...");
             try {
                 uiState = uiState.copy(submitResult = Result.Loading)
-                val iceCream = uiState.iceCream.copy(name = text, tasty = tasty, price = price)
-                val savedIceCream: IceCream;
-                savedIceCream = if (iceCreamId != null) {
+                val iceCream = uiState.iceCream.copy(name = text, tasty = tasty, price = price);
+                val savedIceCream: IceCream = if (!iceCreamId.isNullOrEmpty()) {
                     iceCreamRepository.update(iceCream)
                 } else {
                     iceCreamRepository.save(iceCream)

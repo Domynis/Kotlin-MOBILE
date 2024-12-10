@@ -18,6 +18,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableDoubleStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -40,7 +41,7 @@ fun IceCreamScreen(iceCreamId: String?, onClose: () -> Unit) {
 
     var text by rememberSaveable { mutableStateOf(iceCreamUiState.iceCream?.name ?: "") }
     var tasty by rememberSaveable { mutableStateOf(iceCreamUiState.iceCream?.tasty ?: false) }
-    var price by rememberSaveable { mutableStateOf(iceCreamUiState.iceCream?.price ?: 0.0) }
+    var price by rememberSaveable { mutableDoubleStateOf(iceCreamUiState.iceCream.price) }
     Log.d("IceCreamScreen", "recompose, text = $text, tasty = $tasty, price = $price")
 
     var isInitialized by remember { mutableStateOf(iceCreamId == null) }
@@ -50,6 +51,7 @@ fun IceCreamScreen(iceCreamId: String?, onClose: () -> Unit) {
         if (!isInitialized && iceCreamUiState.loadResult !is Result.Loading) {
             text = iceCreamUiState.iceCream?.name ?: ""
             tasty = iceCreamUiState.iceCream?.tasty ?: false
+            price = iceCreamUiState.iceCream.price
             isInitialized = true
         }
     }
