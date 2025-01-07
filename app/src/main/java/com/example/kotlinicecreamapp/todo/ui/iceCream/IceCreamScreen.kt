@@ -7,6 +7,7 @@ import android.widget.ImageView
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
@@ -38,6 +39,7 @@ import coil.compose.rememberImagePainter
 import com.example.kotlinicecreamapp.MyPhotos
 import com.example.kotlinicecreamapp.R
 import com.example.kotlinicecreamapp.core.Result
+import com.example.kotlinicecreamapp.sensor.LightSensor
 import kotlin.io.encoding.ExperimentalEncodingApi
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -220,6 +222,8 @@ fun IceCreamContent(
                         style = MaterialTheme.typography.labelMedium
                     )
                 }
+
+                LightSensor(modifier = Modifier.fillMaxSize())
             }
         }
 
