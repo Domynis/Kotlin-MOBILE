@@ -17,6 +17,11 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.kotlinicecreamapp.todo.data.IceCream
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideInVertically
 
 typealias onIceCreamFn = (id: String?) -> Unit
 
@@ -34,33 +39,42 @@ fun IceCreamList(
     }
 }
 
+
 @Composable
 fun IceCreamDetail(iceCream: IceCream, onIceCreamClick: onIceCreamFn) {
-    Log.d("IceCreamDetail", "recompose id = ${iceCream._id}")
-    Row(modifier = Modifier.padding(8.dp)) {
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                .clickable { onIceCreamClick(iceCream._id) }
-        ) {
-            Text(
-                text = iceCream.name,
-                style = MaterialTheme.typography.headlineMedium,
-                color = MaterialTheme.colorScheme.primary
-            )
-            Text(
-                text = if (iceCream.tasty) "Tasty 😋" else "Not Tasty 🙁",
-                style = MaterialTheme.typography.bodyMedium,
-                color = if (iceCream.tasty) Color.Green else Color.Red
-            )
-            Text(
-                text = String.format("Price: %.2f €", iceCream.price),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onBackground
-            )
+    AnimatedVisibility(
+        visible = true,
+        enter = slideInHorizontally(
+            initialOffsetX = { fullWidth -> -fullWidth },
+            animationSpec = tween(durationMillis = 500)
+        ) + fadeIn(animationSpec = tween(durationMillis = 500))
+    ) {
+        Row(modifier = Modifier.padding(8.dp)) {
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .clickable { onIceCreamClick(iceCream._id) }
+            ) {
+                Text(
+                    text = iceCream.name,
+                    style = MaterialTheme.typography.headlineMedium,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                Text(
+                    text = if (iceCream.tasty) "Tasty 😋" else "Not Tasty 🙁",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = if (iceCream.tasty) Color.Green else Color.Red
+                )
+                Text(
+                    text = String.format("Price: %.2f €", iceCream.price),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onBackground
+                )
+            }
         }
     }
 }
+
 
 @Preview
 @Composable
