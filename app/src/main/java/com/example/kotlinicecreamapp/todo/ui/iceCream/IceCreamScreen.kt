@@ -1,6 +1,10 @@
 package com.example.kotlinicecreamapp.todo.ui.iceCream
 
+import android.graphics.BitmapFactory
+import android.util.Base64
 import android.util.Log
+import android.widget.ImageView
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -29,8 +33,12 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.rememberAsyncImagePainter
+import coil.compose.rememberImagePainter
+import com.example.kotlinicecreamapp.MyPhotos
 import com.example.kotlinicecreamapp.R
 import com.example.kotlinicecreamapp.core.Result
+import kotlin.io.encoding.ExperimentalEncodingApi
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -42,7 +50,11 @@ fun IceCreamScreen(iceCreamId: String?, onClose: () -> Unit) {
     var text by rememberSaveable { mutableStateOf(iceCreamUiState.iceCream?.name ?: "") }
     var tasty by rememberSaveable { mutableStateOf(iceCreamUiState.iceCream?.tasty ?: false) }
     var price by rememberSaveable { mutableDoubleStateOf(iceCreamUiState.iceCream.price) }
-    Log.d("IceCreamScreen", "recompose, text = $text, tasty = $tasty, price = $price")
+    var image by rememberSaveable { mutableStateOf(iceCreamUiState.iceCream?.image ?: "") }
+    Log.d(
+        "IceCreamScreen",
+        "recompose, text = $text, tasty = $tasty, price = $price, image = ${image != ""}"
+    )
 
     var isInitialized by remember { mutableStateOf(iceCreamId == null) }
 
@@ -52,6 +64,7 @@ fun IceCreamScreen(iceCreamId: String?, onClose: () -> Unit) {
             text = iceCreamUiState.iceCream?.name ?: ""
             tasty = iceCreamUiState.iceCream?.tasty ?: false
             price = iceCreamUiState.iceCream.price
+            image = iceCreamUiState.iceCream?.image ?: ""
             isInitialized = true
         }
     }
@@ -80,8 +93,11 @@ fun IceCreamScreen(iceCreamId: String?, onClose: () -> Unit) {
                 title = { Text(text = stringResource(id = R.string.icecream)) },
                 actions = {
                     Button(onClick = {
-                        Log.d("IceCreamScreen", "save iceCream text = $text, tasty = $tasty, price = $price")
-                        iceCreamViewModel.saveOrUpdateIceCream(text, tasty, price)
+                        Log.d(
+                            "IceCreamScreen",
+                            "save iceCream text = $text, tasty = $tasty, price = $price, image = ${image != ""}"
+                        )
+                        iceCreamViewModel.saveOrUpdateIceCream(text, tasty, price, image)
                     }) { Text("Save") }
                 }
             )
@@ -95,11 +111,14 @@ fun IceCreamScreen(iceCreamId: String?, onClose: () -> Unit) {
             onTastyChange = { tasty = it },
             price = price,
             onPriceChange = { price = it },
+            image = image,
+            onImageChange = { image = it },
             modifier = Modifier.padding(padding)
         )
     }
 }
 
+@OptIn(ExperimentalEncodingApi::class)
 @Composable
 fun IceCreamContent(
     uiState: IceCreamUiState,
@@ -109,8 +128,12 @@ fun IceCreamContent(
     onTastyChange: (Boolean) -> Unit,
     price: Double,
     onPriceChange: (Double) -> Unit,
+    image: String,
+    onImageChange: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    var showPhotos by rememberSaveable { mutableStateOf(false) }
+
     Column(modifier = modifier) {
         when (uiState.loadResult) {
             is Result.Loading -> {
@@ -124,6 +147,46 @@ fun IceCreamContent(
                 )
             }
             else -> {
+                // Display the image if present
+                if (image.isNotBlank()) {
+                    Log.d("IceCreamScreen", "image = ${image != ""}")
+                    val bytes = Base64.decode(image, Base64.DEFAULT)
+                    Image(
+                        painter = rememberAsyncImagePainter(
+                            model = android.graphics.Bitmap.createBitmap(
+                                BitmapFactory.decodeByteArray(
+                                    bytes,
+                                    0,
+                                    bytes.size
+                                )
+                            )
+                        ),
+                        contentDescription = "Ice Cream Image",
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp)
+                    )
+                }
+
+
+
+                if (showPhotos) {
+                    MyPhotos(
+                        modifier = Modifier.fillMaxWidth(),
+                        onImageUpdated = { base64Image ->
+                            onImageChange(base64Image)
+                            showPhotos = false // Hide photo selector after choosing
+                        }
+                    )
+                } else {
+                    Button(
+                        onClick = { showPhotos = true },
+                        modifier = Modifier.padding(bottom = 16.dp)
+                    ) {
+                        Text(if (image.isNotBlank()) "Change Photo" else "Add Photo")
+                    }
+                }
+
                 TextField(
                     value = text,
                     onValueChange = onTextChange,

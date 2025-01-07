@@ -26,7 +26,7 @@ fun IceCreamList(
     onIceCreamClick: onIceCreamFn,
     modifier: Modifier
 ) {
-    Log.d("IceCreamList", "recompose$iceCreams")
+//    Log.d("IceCreamList", "recompose$iceCreams")
     LazyColumn(modifier = modifier) {
         items(iceCreams) { iceCream ->
             IceCreamDetail(iceCream, onIceCreamClick)

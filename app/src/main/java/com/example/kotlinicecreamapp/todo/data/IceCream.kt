@@ -9,7 +9,8 @@ data class IceCream(
     @PrimaryKey var _id: String = "",
     val name: String = "",
     val tasty: Boolean = false,
-    val price: Double = 0.0) {
+    val price: Double = 0.0,
+    val image: String = "") {
     fun toJson(): String {
         return Gson().toJson(this)
     }

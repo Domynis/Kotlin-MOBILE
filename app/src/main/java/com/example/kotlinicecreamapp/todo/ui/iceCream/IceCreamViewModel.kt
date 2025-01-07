@@ -52,12 +52,12 @@ class IceCreamViewModel(
         }
     }
 
-    fun saveOrUpdateIceCream(text: String, tasty: Boolean, price: Double) {
+    fun saveOrUpdateIceCream(text: String, tasty: Boolean, price: Double, image: String) {
         viewModelScope.launch {
             Log.d(TAG, "saveOrUpdateIceCream...");
             try {
                 uiState = uiState.copy(submitResult = Result.Loading)
-                val iceCream = uiState.iceCream.copy(name = text, tasty = tasty, price = price);
+                val iceCream = uiState.iceCream.copy(name = text, tasty = tasty, price = price, image = image);
                 val savedIceCream: IceCream = if (!iceCreamId.isNullOrEmpty()) {
                     iceCreamRepository.update(iceCream)
                 } else {

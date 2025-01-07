@@ -68,29 +68,29 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    /**
-     * Handle permission request result
-     */
-    @Deprecated("Deprecated in Java")
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<out String>,
-        grantResults: IntArray
-    ) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-
-        if (requestCode == NOTIFICATION_PERMISSION_REQUEST_CODE) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                if (grantResults.isNotEmpty() &&
-                    grantResults[0] == PackageManager.PERMISSION_GRANTED
-                ) {
-                    Log.d("MainActivity", "Notification permission granted")
-                } else {
-                    Log.d("MainActivity", "Notification permission denied")
-                }
-            }
-        }
-    }
+//    /**
+//     * Handle permission request result
+//     */
+//    @Deprecated("Deprecated in Java")
+//    override fun onRequestPermissionsResult(
+//        requestCode: Int,
+//        permissions: Array<out String>,
+//        grantResults: IntArray
+//    ) {
+//        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+//
+//        if (requestCode == NOTIFICATION_PERMISSION_REQUEST_CODE) {
+//            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+//                if (grantResults.isNotEmpty() &&
+//                    grantResults[0] == PackageManager.PERMISSION_GRANTED
+//                ) {
+//                    Log.d("MainActivity", "Notification permission granted")
+//                } else {
+//                    Log.d("MainActivity", "Notification permission denied")
+//                }
+//            }
+//        }
+//    }
 
     companion object {
         private const val NOTIFICATION_PERMISSION_REQUEST_CODE = 1001
